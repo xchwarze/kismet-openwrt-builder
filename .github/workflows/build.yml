@@ -7,7 +7,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      RELEASE_VERSION: '23.05'
+      RELEASE_VERSION: '23.05.3/ramips/mt7621'
       SDK_TAR: 'openwrt-sdk-23.05.3-ramips-mt7621_gcc-12.3.0_musl.Linux-x86_64.tar.xz'
       SDK_FOLDER: 'openwrt-sdk-23.05.3-ramips-mt7621_gcc-12.3.0_musl.Linux-x86_64'
       SDK_URL: 'https://downloads.openwrt.org/releases/23.05.3/targets/ramips/mt7621/openwrt-sdk-23.05.3-ramips-mt7621_gcc-12.3.0_musl.Linux-x86_64.tar.xz'
@@ -24,6 +24,11 @@ jobs:
         with:
           repository: 'kismetwireless/kismet-packages'
           path: ${{ env.KISMET_REPO_DIR }}
+
+      - name: Fix kismet-packages 2024
+        run: |
+          echo "[*] Add missing libopenssl support..."
+          sed -i 's/+libsensors/+libsensors +libopenssl/' $KISMET_PACKAGE/kismet/Makefile
 
       - name: Download and prepare OpenWRT SDK
         run: |
