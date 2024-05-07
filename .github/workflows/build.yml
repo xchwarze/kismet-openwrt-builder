@@ -56,22 +56,7 @@ jobs:
           cd $SDK_DIR
           make defconfig
 
-          make -j$(nproc) package/kismet/compile V=s
-          make -j$(nproc) package/kismet-tools/compile V=s
-          make -j$(nproc) package/kismet-manuf-database/compile V=s
-          make -j$(nproc) package/kismet-icao-database/compile V=s
-
-          make -j$(nproc) package/kismet-capture-sdr-rtl433/compile V=s
-          make -j$(nproc) package/kismet-capture-sdr-rtlamr/compile V=s
-          make -j$(nproc) package/kismet-capture-sdr-rtladsb/compile V=s
-          make -j$(nproc) package/kismet-capture-linux-bluetooth/compile V=s
-          make -j$(nproc) package/kismet-capture-rz-killerbee/compile V=s
-          make -j$(nproc) package/kismet-capture-ti-cc2531/compile V=s
-          make -j$(nproc) package/kismet-capture-linux-wifi/compile V=s
-          make -j$(nproc) package/kismet-capture-ti-cc2540/compile V=s
-          make -j$(nproc) package/kismet-capture-nxp-kw41z/compile V=s
-          make -j$(nproc) package/kismet-capture-nrf-51822/compile V=s
-          make -j$(nproc) package/kismet-capture-nrf-52840/compile V=s
+          make -j$(nproc) package/kismet/compile
 
       - name: Checkout current repo
         uses: actions/checkout@v4
@@ -94,3 +79,4 @@ jobs:
           else
             git commit -m "Automated build and deploy of Kismet packages for OpenWRT"
             git push
+          fi
