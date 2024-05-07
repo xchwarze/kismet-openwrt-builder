@@ -1,0 +1,74 @@
+name: Build and Deploy Kismet for OpenWRT
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    env:
+      SDK_TAR: 'openwrt-sdk-23.05.3-ramips-mt7621_gcc-12.3.0_musl.Linux-x86_64.tar.xz'
+      SDK_FOLDER: 'openwrt-sdk-23.05.3-ramips-mt7621_gcc-12.3.0_musl.Linux-x86_64'
+      SDK_URL: 'https://downloads.openwrt.org/releases/23.05.3/targets/ramips/mt7621/openwrt-sdk-23.05.3-ramips-mt7621_gcc-12.3.0_musl.Linux-x86_64.tar.xz'
+      BUILD_DIR: '${{ github.workspace }}'
+      SDK_DIR: '${{ github.workspace }}/openwrt-sdk'
+      KISMET_REPO_DIR: '${{ github.workspace }}/kismet-packages'
+      KISMET_PACKAGE: '${{ github.workspace }}/kismet-packages/openwrt/kismet-openwrt'
+      IPK_OUTPUT_DIR: '${{ github.workspace }}/openwrt-sdk/packages/kismet'
+      CURRENT_REPO_DIR: '${{ github.workspace }}/release-repo'
+
+    steps:
+      - name: Checkout Kismet packaging code
+        uses: actions/checkout@v4
+        with:
+          repository: 'kismetwireless/kismet-packages'
+          path: ${{ env.KISMET_REPO_DIR }}
+
+      - name: Download and prepare OpenWRT SDK
+        run: |
+          echo "[*] Downloading SDK..."
+          wget -q $SDK_URL -P $BUILD_DIR
+
+          echo "[*] Prepare folder"
+          tar xJf $BUILD_DIR/$SDK_TAR -C $BUILD_DIR
+          mv $BUILD_DIR/$SDK_FOLDER $SDK_DIR
+
+      - name: Prepare packages
+        run: |
+          echo "[*] Copying feeds configuration and adding Kismet"
+          cp $SDK_DIR/feeds.conf.default $SDK_DIR/feeds.conf
+          echo "src-link kismet $KISMET_PACKAGE" >> $SDK_DIR/feeds.conf
+
+          echo "[*] Update and install feeds"
+          cd $SDK_DIR
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a
+
+      - name: Build packages
+        run: |
+          echo "[*] Update and install feeds"
+          cd $SDK_DIR
+          make defconfig          
+          make -j$(nproc) package/kismet/compile V=s
+
+      - name: Checkout current repo
+        uses: actions/checkout@v4
+        with:
+          path: ${{ env.CURRENT_REPO_DIR }}
+
+      - name: Move build output
+        run: |
+          mkdir -p $IPK_OUTPUT_DIR
+          cp $IPK_OUTPUT_DIR/*.ipk $CURRENT_REPO_DIR
+
+      - name: Commit and push compiled packages
+        run: |
+          cd $IPK_OUTPUT_DIR
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add *.ipk
+          if git diff --staged --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Automated build and deploy of Kismet packages for OpenWRT"
+            git push
