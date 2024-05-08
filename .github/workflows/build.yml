@@ -54,9 +54,26 @@ jobs:
         run: |
           echo "[*] Update and install feeds"
           cd $SDK_DIR
+
           make defconfig
+          echo 'CONFIG_CCACHE=y' >> ${{ env.SDK_DIR }}/.config
 
           make -j$(nproc) package/kismet/compile
+          make -j$(nproc) package/kismet-tools/compile
+          make -j$(nproc) package/kismet-manuf-database/compile
+          make -j$(nproc) package/kismet-icao-database/compile
+
+          make -j$(nproc) package/kismet-capture-sdr-rtl433/compile
+          make -j$(nproc) package/kismet-capture-sdr-rtlamr/compile
+          make -j$(nproc) package/kismet-capture-sdr-rtladsb/compile
+          make -j$(nproc) package/kismet-capture-linux-bluetooth/compile
+          make -j$(nproc) package/kismet-capture-rz-killerbee/compile
+          make -j$(nproc) package/kismet-capture-ti-cc2531/compile
+          make -j$(nproc) package/kismet-capture-linux-wifi/compile
+          make -j$(nproc) package/kismet-capture-ti-cc2540/compile
+          make -j$(nproc) package/kismet-capture-nxp-kw41z/compile
+          make -j$(nproc) package/kismet-capture-nrf-51822/compile
+          make -j$(nproc) package/kismet-capture-nrf-52840/compile
 
       - name: Checkout current repo
         uses: actions/checkout@v4
